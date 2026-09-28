@@ -14,26 +14,27 @@
     <div class="notice"><span></span> Catálogo independente. Confirme sempre os dados, edital e a oferta no canal oficial.</div>
     <header class="header">
       <a class="brand" href="#inicio" aria-label="Imóvel em Disputa - início"><i></i><strong>imóvel</strong><em>em disputa</em></a>
-      <nav><a href="#oportunidades">Oportunidades</a><a href="#como-funciona">Como funciona</a><a href="#alertas">Alertas</a></nav>
-      <a class="header-cta" href="#alertas">Receber alertas <b>↗</b></a>
+      <nav><a href="#oportunidades">Oportunidades</a><a href="#como-funciona">Como funciona</a><a href="#fonte">Fonte dos dados</a></nav>
+      <a class="header-cta" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Portal da CAIXA <b>↗</b></a>
     </header>
     <main id="inicio">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">CATÁLOGO NACIONAL · ATUALIZAÇÃO PROGRAMADA</p>
+          <p class="eyebrow">CATÁLOGO NACIONAL · DADOS DA CAIXA</p>
           <h1>Encontre o imóvel certo <i>antes</i> da disputa.</h1>
           <p class="lead">Uma busca mais clara para oportunidades da CAIXA. Filtre, compare e siga direto para a fonte oficial.</p>
           <div class="hero-actions"><a class="button primary" href="#oportunidades">Explorar imóveis <b>↓</b></a><a class="button text" href="#como-funciona">Entenda o processo <b>→</b></a></div>
         </div>
-        <aside class="hero-stat" aria-label="Resumo do catálogo demonstrativo">
+        <aside class="hero-stat" aria-label="Abrangência do catálogo">
           <div class="stamp">OPORTUNIDADE<br/>EM FOCO</div>
-          <p>DESCONTO MÉDIO</p><strong>38<span>%</span></strong><hr/><small>Dados exibidos neste MVP são demonstrativos.</small>
+          <p>ABRANGÊNCIA</p><strong>27<span> UFs</span></strong><hr/><small>Dados da lista pública nacional da CAIXA. Confira a oferta oficial antes de decidir.</small>
         </aside>
       </section>
       <section class="search-panel" aria-label="Filtros de pesquisa">
         <div class="search-heading"><span>01</span><h2>O que você procura?</h2></div>
         <div class="search-grid">
           <label>Estado<select id="stateFilter"><option value="">Todo o Brasil</option></select></label>
+          <label>Cidade<input id="cityFilter" type="search" placeholder="Digite uma cidade" /></label>
           <label>Modalidade<select id="modeFilter"><option value="">Todas as modalidades</option></select></label>
           <label>Tipo<select id="typeFilter"><option value="">Todos os tipos</option></select></label>
           <label>Faixa de valor<select id="priceFilter"><option value="">Qualquer valor</option><option value="150000">Até R$ 150 mil</option><option value="300000">Até R$ 300 mil</option><option value="500000">Até R$ 500 mil</option></select></label>
@@ -47,7 +48,7 @@
         <button id="moreButton" class="load-more">Ver mais oportunidades <span>↓</span></button>
       </section>
       <section id="como-funciona" class="process"><div class="process-intro"><p class="eyebrow">SEM PEGADINHAS</p><h2>Decida com dados.<br/><i>Compre no canal oficial.</i></h2></div><ol><li><span>01</span><div><h3>Descubra</h3><p>Use os filtros para encontrar oportunidades que fazem sentido para seu momento.</p></div></li><li><span>02</span><div><h3>Analise</h3><p>Verifique condições, ocupação, despesas e leia todo o edital antes de qualquer decisão.</p></div></li><li><span>03</span><div><h3>Participe</h3><p>Acesse a página oficial da CAIXA ou o leiloeiro indicado para fazer sua proposta.</p></div></li></ol></section>
-      <section id="alertas" class="alert"><div><p class="eyebrow">NÃO PERCA UMA BOA JANELA</p><h2>Quer receber novas<br/><i>oportunidades?</i></h2></div><form id="alertForm"><label>Seu melhor e-mail<input type="email" placeholder="voce@exemplo.com" required /></label><button class="button light" type="submit">Criar meu alerta <b>→</b></button><small>Ao continuar, você concorda em receber alertas. Sem spam.</small></form></section>
+      <section id="fonte" class="alert"><div><p class="eyebrow">DADOS PÚBLICOS, DECISÃO INFORMADA</p><h2>Confira sempre<br/><i>na fonte oficial.</i></h2></div><div class="source-copy"><p>O catálogo usa a lista nacional disponibilizada pela CAIXA. Preços, disponibilidade e condições podem mudar. Leia a página do imóvel e o edital antes de participar.</p><a class="button light" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Abrir portal da CAIXA <b>↗</b></a></div></section>
     </main>
     <footer><div class="brand"><i></i><strong>imóvel</strong><em>em disputa</em></div><p>Plataforma independente de descoberta de imóveis. Não somos a CAIXA nem realizamos leilões, propostas ou pagamentos.</p><a href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Portal oficial da CAIXA ↗</a><small>© <span id="year"></span> Imóvel em Disputa</small></footer>
     <dialog id="detailDialog"><button class="close" aria-label="Fechar">×</button><div id="detailContent"></div></dialog>

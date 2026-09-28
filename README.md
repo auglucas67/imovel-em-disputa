@@ -4,24 +4,14 @@ MVP de catálogo para descoberta de imóveis ofertados pela CAIXA. O feed preser
 
 ## Sincronização do catálogo
 
-O portal da CAIXA responde com Radware Bot Manager CAPTCHA quando a coleta vem da infraestrutura do Cloudflare. Por isso a sincronização roda em uma máquina/servidor autorizado, sem tentar contornar esta proteção:
+A opção **Todos** na [lista completa da CAIXA](https://venda-imoveis.caixa.gov.br/sistema/download-lista.asp) fornece um CSV nacional. O script `scripts/download-caixa.ps1` baixa esse arquivo e `scripts/sync-caixa.mjs` valida as colunas, normaliza os registros e gera `public/data/listings.json`. Um arquivo inválido ou indisponível não substitui o catálogo anterior.
 
-```powershell
-pnpm run sync:caixa
-```
-
-Para um teste rápido de uma UF:
-
-```powershell
-pnpm run sync:caixa --states=MG
-```
-
-O comando gera `public/data/listings.json`, que é publicado como feed estático junto com o site. Programe este comando uma vez ao dia apenas depois de obter a autorização da CAIXA para reutilização comercial dos dados. A navegação nunca envia propostas nem manipula áreas autenticadas.
+Para atualizar manualmente, execute `pnpm run sync:caixa` no Windows. O fluxo `.github/workflows/sync-caixa.yml` tenta uma atualização diária às 09:20 UTC e envia o feed validado ao repositório. Caso a CAIXA bloqueie a execução remota, o fluxo falha e o catálogo publicado continua disponível. A sincronização não acessa áreas autenticadas nem envia propostas.
 
 ## Publicação
 
-1. `npm install --save-dev wrangler`
-2. `npx wrangler login`
-3. `npm run deploy`
+1. `pnpm install`
+2. `pnpm run sync:caixa`
+3. `pnpm run deploy` com sua conta Cloudflare autenticada
 
 O Worker publica os arquivos estáticos em `public/` no Cloudflare Workers.

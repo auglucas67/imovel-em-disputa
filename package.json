@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx wrangler dev",
     "deploy": "npx wrangler deploy",
-    "sync:caixa": "node scripts/sync-caixa.mjs"
+    "sync:caixa": "pwsh -File scripts/download-caixa.ps1"
   },
   "devDependencies": {
     "wrangler": "^4.142.0"

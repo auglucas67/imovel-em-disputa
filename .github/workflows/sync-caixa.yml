@@ -1,0 +1,36 @@
+name: Atualizar catálogo CAIXA
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 9 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-caixa
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Baixar e validar CSV nacional da CAIXA
+        shell: pwsh
+        run: ./scripts/download-caixa.ps1
+      - name: Publicar catálogo atualizado no repositório
+        shell: pwsh
+        run: |
+          git add public/data/listings.json
+          if (git diff --cached --quiet) { exit 0 }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'data: atualizar lista pública de imóveis CAIXA'
+          git push

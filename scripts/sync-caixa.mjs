@@ -1,15 +1,11 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const states = ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
-const sourcePrefix = 'https://venda-imoveis.caixa.gov.br/listaweb/Lista_imoveis_';
-const requestedStates = (process.argv.find(arg => arg.startsWith('--states='))?.split('=')[1]?.split(',') ?? states).map(value => value.trim().toUpperCase()).filter(value => states.includes(value));
-const delayMs = Number(process.argv.find(arg => arg.startsWith('--delay='))?.split('=')[1] ?? 1600);
+const inputArg = process.argv.find(arg => arg.startsWith('--input='));
+if (!inputArg) throw new Error('Informe --input=CAMINHO_DO_CSV da opção Todos no portal da CAIXA.');
+const input = resolve(process.cwd(), inputArg.slice('--input='.length));
 const output = resolve(process.cwd(), 'public', 'data', 'listings.json');
-
-function numberBR(value) {
-  return Number(String(value ?? '').trim().replaceAll('.', '').replace(',', '.')) || 0;
-}
+const sourceUrl = 'https://venda-imoveis.caixa.gov.br/listaweb/Lista_imoveis_geral.csv';
 
 function parseLine(line) {
   const cells = []; let value = ''; let quoted = false;
@@ -25,34 +21,35 @@ function parseLine(line) {
   return cells;
 }
 
-function normalize(csv) {
-  return csv.split(/\r?\n/).slice(3).map(parseLine)
-    .filter(row => row.length >= 12 && row[0]?.trim())
-    .map(row => {
-      const description = row[9] || '';
-      return { id: row[0].trim(), state: row[1].trim(), city: row[2].trim(), neighborhood: row[3].trim(), address: row[4].trim(), price: numberBR(row[5]), appraisal: numberBR(row[6]), discount: Number(String(row[7]).replace(',', '.')) || 0, financing: /^sim$/i.test(row[8].trim()), description, type: description.split(',')[0].trim() || 'Imóvel', mode: row[10].trim(), officialUrl: row[11].trim() };
-    }).filter(item => item.officialUrl.startsWith('https://venda-imoveis.caixa.gov.br/'));
+const amount = value => Number(String(value ?? '').trim().replaceAll('.', '').replace(',', '.'));
+const csv = new TextDecoder('windows-1252').decode(await readFile(input));
+const lines = csv.split(/\r?\n/);
+if (!lines.some(line => line.includes('do imóvel;UF;Cidade;') && line.includes('Link de acesso'))) {
+  throw new Error('O arquivo recebido não é a lista CSV oficial esperada. O feed anterior foi preservado.');
 }
+const generatedAt = lines.find(line => line.includes('Data de geração:'))?.split(';')[3]?.trim() || null;
+const listings = lines.map(parseLine).filter(row => row.length >= 12 && /^\d+$/.test(row[0]?.trim())).map(row => {
+  const description = row[9] || '';
+  return {
+    id: row[0].trim(), state: row[1].trim(), city: row[2].trim(), neighborhood: row[3].trim(),
+    address: row[4].trim(), price: amount(row[5]), appraisal: amount(row[6]),
+    discount: Number(String(row[7]).replace(',', '.')),
+    financing: /^sim$/i.test(row[8].trim()), description,
+    type: description.split(',')[0].trim() || 'Imóvel', mode: row[10].trim(),
+    officialUrl: row[11].trim(),
+  };
+}).filter(item => item.id && /^[A-Z]{2}$/.test(item.state) && Number.isFinite(item.price)
+  && Number.isFinite(item.appraisal) && Number.isFinite(item.discount)
+  && item.officialUrl.startsWith('https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?'));
 
-const pause = ms => new Promise(resolvePause => setTimeout(resolvePause, ms));
-const decoder = new TextDecoder('windows-1252');
-const listings = [];
-const failures = [];
-for (const [index, state] of requestedStates.entries()) {
-  try {
-    const response = await fetch(`${sourcePrefix}${state}.csv?159567998`, { headers: { accept: 'text/csv,*/*' } });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const rows = normalize(decoder.decode(await response.arrayBuffer()));
-    listings.push(...rows);
-    console.log(`${state}: ${rows.length} imóveis`);
-  } catch (error) {
-    failures.push({ state, message: error instanceof Error ? error.message : 'falha desconhecida' });
-    console.error(`${state}: falhou`);
-  }
-  if (index < requestedStates.length - 1) await pause(delayMs);
+const unique = new Map(listings.map(item => [item.id, item]));
+if (unique.size < 1000 || unique.size < listings.length * 0.95) {
+  throw new Error(`CSV incompleto ou duplicado: ${listings.length} linhas, ${unique.size} imóveis únicos. Feed anterior preservado.`);
 }
-
-if (!listings.length) throw new Error('Nenhuma lista foi obtida. A fonte pode exigir autorização ou estar indisponível.');
 await mkdir(resolve(process.cwd(), 'public', 'data'), { recursive: true });
-await writeFile(output, JSON.stringify({ source: 'CAIXA — Lista completa de imóveis por UF', sourceUrl: 'https://venda-imoveis.caixa.gov.br/sistema/download-lista.asp', syncedAt: new Date().toISOString(), requestedStates, failures, total: listings.length, listings }));
-console.log(`Feed salvo em ${output} (${listings.length} imóveis).`);
+const draft = `${output}.tmp`;
+const feed = { source: 'CAIXA — Lista completa de imóveis, opção Todos', sourceUrl,
+  generatedAt, syncedAt: new Date().toISOString(), total: unique.size, listings: [...unique.values()] };
+await writeFile(draft, JSON.stringify(feed));
+await rename(draft, output);
+console.log(`Feed atualizado: ${feed.total} imóveis em ${new Set(feed.listings.map(item => item.state)).size} UFs. Lista CAIXA gerada em ${generatedAt}.`);

@@ -1,27 +1,131 @@
-const demoListings = [
-  { id: 1, city: 'Contagem', state: 'MG', neighborhood: 'Eldorado', type: 'Apartamento', mode: 'Venda Online', price: 142800, appraisal: 238000, discount: 40, financing: true, fgts: true, occupied: false, img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80' },
-  { id: 2, city: 'Goiânia', state: 'GO', neighborhood: 'Jardim América', type: 'Casa', mode: 'Licitação Aberta', price: 285000, appraisal: 430000, discount: 34, financing: true, fgts: false, occupied: true, img: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1000&q=80' },
-  { id: 3, city: 'Santos', state: 'SP', neighborhood: 'Campo Grande', type: 'Apartamento', mode: 'Leilão SFI', price: 198400, appraisal: 365000, discount: 46, financing: false, fgts: false, occupied: false, img: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=80' },
-  { id: 4, city: 'Recife', state: 'PE', neighborhood: 'Boa Viagem', type: 'Apartamento', mode: 'Compra Direta', price: 321000, appraisal: 458000, discount: 30, financing: true, fgts: true, occupied: false, img: 'https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?auto=format&fit=crop&w=1000&q=80' },
-  { id: 5, city: 'Curitiba', state: 'PR', neighborhood: 'Portão', type: 'Casa', mode: 'Venda Online', price: 255900, appraisal: 415000, discount: 38, financing: true, fgts: true, occupied: false, img: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1000&q=80' },
-  { id: 6, city: 'Salvador', state: 'BA', neighborhood: 'Itapuã', type: 'Terreno', mode: 'Leilão SFI', price: 117500, appraisal: 205000, discount: 43, financing: false, fgts: false, occupied: false, img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80' },
-];
-const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-let listings = demoListings;
-const states = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
-const modes = ['Compra Direta (Venda Direta Online)', 'Exercício de Direito de Preferência', 'Leilão SFI - Edital Único', 'Licitação Aberta', 'Venda Online'];
-const els = { cards: document.querySelector('#cards'), count: document.querySelector('#count'), state: document.querySelector('#stateFilter'), mode: document.querySelector('#modeFilter'), type: document.querySelector('#typeFilter'), price: document.querySelector('#priceFilter'), sort: document.querySelector('#sortFilter'), dialog: document.querySelector('#detailDialog'), sourceStatus: document.querySelector('#sourceStatus') };
-let activeQuick = '';
+const money = value => Number(value).toLocaleString('pt-BR', {
+  style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
+});
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[char]);
+const normalizeText = value => String(value ?? '').normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+const els = {
+  cards: document.querySelector('#cards'), count: document.querySelector('#count'),
+  state: document.querySelector('#stateFilter'), city: document.querySelector('#cityFilter'),
+  mode: document.querySelector('#modeFilter'), type: document.querySelector('#typeFilter'),
+  price: document.querySelector('#priceFilter'), sort: document.querySelector('#sortFilter'),
+  dialog: document.querySelector('#detailDialog'), sourceStatus: document.querySelector('#sourceStatus'),
+  more: document.querySelector('#moreButton'),
+};
+
+let listings = [];
 let visibleCount = 24;
-function options(select, values) { [...new Set(values)].sort().forEach(value => select.insertAdjacentHTML('beforeend', `<option value="${value}">${value}</option>`)); }
-options(els.state, states); options(els.mode, modes); options(els.type, ['Apartamento', 'Casa', 'Comercial', 'Gleba', 'Loja', 'Lote', 'Prédio', 'Sala', 'Terreno']);
-function filtered() { let items = listings.filter(x => (!els.state.value || x.state === els.state.value) && (!els.mode.value || x.mode === els.mode.value) && (!els.type.value || x.type === els.type.value) && (!els.price.value || x.price <= +els.price.value)); if (activeQuick === 'financing') items = items.filter(x => x.financing); if (activeQuick === 'discount') items = items.filter(x => x.discount >= 30); return items.sort((a,b) => els.sort.value === 'price' ? a.price - b.price : b.discount - a.discount); }
-function imageFor(item) { return item.img || `https://images.unsplash.com/photo-${item.type === 'Terreno' ? '1500382017468-9049fed747ef' : '1600585154340-be6161a56a0c'}?auto=format&fit=crop&w=1000&q=80`; }
-function render() { const items = filtered(); const visible = items.slice(0, visibleCount); els.count.textContent = `${items.length} ${items.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}`; els.cards.innerHTML = items.length ? visible.map(x => `<article class="card" data-id="${x.id}"><div class="card-photo" style="background-image:url('${imageFor(x)}')"><span>${x.discount}% OFF</span><button aria-label="Salvar ${x.type} em ${x.city}">♡</button></div><div class="card-body"><p>${x.city}, ${x.state} <small>· ${x.neighborhood}</small></p><h3>${x.type}</h3><div class="tags">${x.financing ? '<b>Financia</b>' : ''}</div><strong>${money(x.price)}</strong><del>Avaliado em ${money(x.appraisal)}</del><footer><span>${x.mode}</span><a href="#">Ver imóvel <i>→</i></a></footer></div></article>`).join('') : '<div class="empty">Nenhuma oportunidade com esses filtros. Tente ampliar a busca.</div>'; const more = document.querySelector('#moreButton'); more.hidden = visible.length >= items.length; }
-function detail(id) { const x = listings.find(item => String(item.id) === String(id)); document.querySelector('#detailContent').innerHTML = `<img src="${imageFor(x)}" alt="Imagem ilustrativa de ${x.type}"/><p class="eyebrow">${x.mode.toUpperCase()}</p><h2>${x.type} em ${x.city}, ${x.state}</h2><p>${x.neighborhood || 'Localização conforme lista oficial'}${x.address ? ` · ${x.address}` : ''}</p><strong>${money(x.price)}</strong><p>Valor de avaliação: ${money(x.appraisal)} · desconto de ${x.discount}%</p><a class="button primary" href="${x.officialUrl || 'https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp'}" target="_blank" rel="noreferrer">Consultar oferta oficial ↗</a><small>Os dados de preço, modalidade e link vêm da lista pública da CAIXA. Consulte edital, matrícula e condições antes de participar.</small>`; els.dialog.showModal(); }
-async function loadOfficialListings() { visibleCount = 24; els.sourceStatus.textContent = 'CARREGANDO FEED OFICIAL'; try { const response = await fetch('/data/listings.json', { cache: 'no-store' }); if (!response.ok) throw new Error('Feed ainda não sincronizado'); const data = await response.json(); listings = data.listings; els.sourceStatus.textContent = `FONTE OFICIAL · ${new Date(data.syncedAt).toLocaleDateString('pt-BR')}`; } catch { listings = demoListings; els.sourceStatus.textContent = 'MODO DEMONSTRAÇÃO · AGUARDANDO SINCRONIZAÇÃO'; } render(); }
-document.querySelector('#searchButton').addEventListener('click', async () => { document.querySelector('#oportunidades').scrollIntoView({behavior:'smooth'}); await loadOfficialListings(); });
-[els.state, els.mode, els.type, els.price, els.sort].forEach(el => el.addEventListener('change', render));
-document.querySelectorAll('[data-quick]').forEach(button => button.addEventListener('click', async () => { activeQuick = activeQuick === button.dataset.quick ? '' : button.dataset.quick; document.querySelectorAll('[data-quick]').forEach(x => x.classList.toggle('active', x === button && !!activeQuick)); await loadOfficialListings(); }));
-els.cards.addEventListener('click', e => { const card = e.target.closest('.card'); if (card && (e.target.closest('a') || e.target.closest('.card-photo'))) { e.preventDefault(); detail(card.dataset.id); } });
-document.querySelector('#moreButton').addEventListener('click', () => { visibleCount += 24; render(); }); document.querySelector('.close').addEventListener('click', () => els.dialog.close()); document.querySelector('#alertForm').addEventListener('submit', event => { event.preventDefault(); event.currentTarget.innerHTML = '<h3>Alerta criado.</h3><p>Quando esta integração estiver ativa, você receberá novidades por e-mail.</p>'; }); document.querySelector('#year').textContent = new Date().getFullYear(); render(); loadOfficialListings();
+let activeQuick = '';
+
+function addOptions(select, values) {
+  [...new Set(values)].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .forEach(value => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      select.append(option);
+    });
+}
+
+function filtered() {
+  const city = normalizeText(els.city.value);
+  const maxPrice = Number(els.price.value);
+  const items = listings.filter(item =>
+    (!els.state.value || item.state === els.state.value)
+    && (!city || normalizeText(item.city).includes(city))
+    && (!els.mode.value || item.mode === els.mode.value)
+    && (!els.type.value || item.type === els.type.value)
+    && (!maxPrice || item.price <= maxPrice)
+    && (activeQuick !== 'financing' || item.financing)
+    && (activeQuick !== 'discount' || item.discount >= 30));
+  return items.sort((a, b) => els.sort.value === 'price'
+    ? a.price - b.price : b.discount - a.discount);
+}
+
+function render() {
+  const items = filtered();
+  els.count.textContent = `${items.length.toLocaleString('pt-BR')} ${items.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}`;
+  els.cards.innerHTML = items.length ? items.slice(0, visibleCount).map(item => `
+    <article class="card" data-id="${escapeHtml(item.id)}">
+      <div class="card-photo" aria-label="Imagem ilustrativa, não representa o imóvel anunciado">
+        <span>${Number(item.discount).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% OFF</span>
+        <div class="photo-mark">${escapeHtml(item.type.slice(0, 1))}</div>
+        <small>Foto não disponibilizada na lista</small>
+      </div>
+      <div class="card-body">
+        <p>${escapeHtml(item.city)}, ${escapeHtml(item.state)} <small>· ${escapeHtml(item.neighborhood)}</small></p>
+        <h3>${escapeHtml(item.type)}</h3>
+        <div class="tags">${item.financing ? '<b>Financiamento</b>' : ''}<b>CAIXA</b></div>
+        <strong>${money(item.price)}</strong>
+        <del>Valor de avaliação ${money(item.appraisal)}</del>
+        <footer><span>${escapeHtml(item.mode)}</span><button class="detail-button" type="button">Ver detalhes <i>→</i></button></footer>
+      </div>
+    </article>`).join('')
+    : '<div class="empty">Nenhum imóvel encontrado. Ajuste os filtros e tente novamente.</div>';
+  els.more.hidden = items.length <= visibleCount;
+}
+
+function openDetail(id) {
+  const item = listings.find(listing => listing.id === id);
+  if (!item) return;
+  const officialUrl = new URL(item.officialUrl);
+  if (officialUrl.hostname !== 'venda-imoveis.caixa.gov.br') return;
+  document.querySelector('#detailContent').innerHTML = `
+    <p class="eyebrow">${escapeHtml(item.mode.toUpperCase())} · Nº ${escapeHtml(item.id)}</p>
+    <h2>${escapeHtml(item.type)} em ${escapeHtml(item.city)}, ${escapeHtml(item.state)}</h2>
+    <p>${escapeHtml(item.neighborhood)} · ${escapeHtml(item.address)}</p>
+    <strong>${money(item.price)}</strong>
+    <p>Valor de avaliação: ${money(item.appraisal)} · desconto informado: ${Number(item.discount).toLocaleString('pt-BR')}%</p>
+    <p>${escapeHtml(item.description)}</p>
+    <a class="button primary" href="${escapeHtml(officialUrl.href)}" target="_blank" rel="noopener noreferrer">Abrir este imóvel na CAIXA ↗</a>
+    <small>Confirme preço, disponibilidade, edital e condições no portal da CAIXA.</small>`;
+  els.dialog.showModal();
+}
+
+async function loadCatalog() {
+  els.sourceStatus.textContent = 'CARREGANDO LISTA DA CAIXA';
+  try {
+    const response = await fetch('/data/listings.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const feed = await response.json();
+    if (!Array.isArray(feed.listings) || feed.listings.length < 1000) throw new Error('Catálogo incompleto');
+    listings = feed.listings;
+    addOptions(els.state, listings.map(item => item.state));
+    addOptions(els.mode, listings.map(item => item.mode));
+    addOptions(els.type, listings.map(item => item.type));
+    els.sourceStatus.textContent = `LISTA DA CAIXA · GERADA EM ${feed.generatedAt || new Date(feed.syncedAt).toLocaleDateString('pt-BR')}`;
+  } catch (error) {
+    els.sourceStatus.textContent = 'CATÁLOGO TEMPORARIAMENTE INDISPONÍVEL';
+    els.cards.innerHTML = '<div class="empty">Não foi possível carregar a lista agora. Consulte o portal oficial da CAIXA.</div>';
+    els.more.hidden = true;
+    console.error('Falha ao carregar catálogo:', error);
+    return;
+  }
+  render();
+}
+
+document.querySelector('#searchButton').addEventListener('click', () => {
+  visibleCount = 24;
+  render();
+  document.querySelector('#oportunidades').scrollIntoView({ behavior: 'smooth' });
+});
+[els.state, els.mode, els.type, els.price, els.sort].forEach(element =>
+  element.addEventListener('change', () => { visibleCount = 24; render(); }));
+els.city.addEventListener('input', () => { visibleCount = 24; render(); });
+document.querySelectorAll('[data-quick]').forEach(button => button.addEventListener('click', () => {
+  activeQuick = activeQuick === button.dataset.quick ? '' : button.dataset.quick;
+  document.querySelectorAll('[data-quick]').forEach(candidate =>
+    candidate.classList.toggle('active', candidate.dataset.quick === activeQuick));
+  visibleCount = 24;
+  render();
+}));
+els.cards.addEventListener('click', event => {
+  if (event.target.closest('.detail-button')) openDetail(event.target.closest('.card').dataset.id);
+});
+els.more.addEventListener('click', () => { visibleCount += 24; render(); });
+document.querySelector('.close').addEventListener('click', () => els.dialog.close());
+document.querySelector('#year').textContent = new Date().getFullYear();
+loadCatalog();

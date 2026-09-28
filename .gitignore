@@ -1,4 +1,5 @@
 node_modules/
 .wrangler/
 .dev.vars
-public/data/listings.json
+public/data/listings.json.tmp
+tmp-caixa-geral.csv
