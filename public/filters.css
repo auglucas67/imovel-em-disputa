@@ -1,4 +1,10 @@
+.search-panel{margin-bottom:95px}
+.search-grid .button:disabled{opacity:.55;cursor:wait}
+.quick-message{font:11px 'DM Mono',monospace;margin:8px 0 0;min-height:0;color:#6a3b2c}
+.quick-filters button[hidden]{display:none}
 .results{padding:78px 4vw 100px}
+.results[hidden]{display:none}
+.back-search{border:0;background:transparent;color:var(--ink);font:700 12px Manrope,Arial,sans-serif;cursor:pointer;margin:0 0 26px;padding:0}
 .results-shell{display:grid;grid-template-columns:290px minmax(0,1fr);gap:34px;align-items:start;max-width:1600px;margin:auto}
 .results-main{min-width:0}
 .results-main .section-title{gap:20px;align-items:end}

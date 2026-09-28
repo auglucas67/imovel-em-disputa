@@ -15,7 +15,7 @@
     <div class="notice"><span></span> Catálogo independente. Confirme sempre os dados, edital e a oferta no canal oficial.</div>
     <header class="header">
       <a class="brand" href="#inicio" aria-label="Imóvel em Disputa - início"><i></i><strong>imóvel</strong><em>em disputa</em></a>
-      <nav><a href="#oportunidades">Oportunidades</a><a href="#como-funciona">Como funciona</a><a href="#fonte">Fonte dos dados</a></nav>
+      <nav><a href="#busca">Oportunidades</a><a href="#como-funciona">Como funciona</a><a href="#fonte">Fonte dos dados</a></nav>
       <a class="header-cta" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Portal da CAIXA <b>↗</b></a>
     </header>
     <main id="inicio">
@@ -24,14 +24,28 @@
           <p class="eyebrow">CATÁLOGO NACIONAL · DADOS DA CAIXA</p>
           <h1>Encontre o imóvel certo <i>antes</i> da disputa.</h1>
           <p class="lead">Uma busca mais clara para oportunidades da CAIXA. Filtre, compare e siga direto para a fonte oficial.</p>
-          <div class="hero-actions"><a class="button primary" href="#oportunidades">Explorar imóveis <b>↓</b></a><a class="button text" href="#como-funciona">Entenda o processo <b>→</b></a></div>
+          <div class="hero-actions"><a class="button primary" href="#busca">Explorar imóveis <b>↓</b></a><a class="button text" href="#como-funciona">Entenda o processo <b>→</b></a></div>
         </div>
         <aside class="hero-stat" aria-label="Abrangência do catálogo">
           <div class="stamp">OPORTUNIDADE<br/>EM FOCO</div>
           <p>ABRANGÊNCIA</p><strong>27<span> UFs</span></strong><hr/><small>Dados da lista pública nacional da CAIXA. Confira a oferta oficial antes de decidir.</small>
         </aside>
       </section>
-      <section id="oportunidades" class="results">
+      <section id="busca" class="search-panel" aria-label="Busca inicial de imóveis">
+        <div class="search-heading"><span>01</span><h2>O que você procura?</h2></div>
+        <div class="search-grid">
+          <label>Estado<select id="quickState"><option value="">Todo o Brasil</option></select></label>
+          <label>Cidade<input id="quickCity" type="search" list="quickCityOptions" placeholder="Digite uma cidade" /><datalist id="quickCityOptions"></datalist></label>
+          <label>Modalidade<select id="quickMode"><option value="">Todas as modalidades</option></select></label>
+          <label>Tipo<select id="quickType"><option value="">Todos os tipos</option></select></label>
+          <label>Faixa de valor<select id="quickPrice"><option value="">Qualquer valor</option><option value="150000">Até R$ 150 mil</option><option value="300000">Até R$ 300 mil</option><option value="500000">Até R$ 500 mil</option></select></label>
+          <button id="searchButton" class="button primary" type="button" disabled>Buscar agora <b>→</b></button>
+        </div>
+        <div class="quick-filters"><button id="quickFinancing" type="button">Aceita financiamento</button><button id="quickDiscount" type="button">Desconto acima de 30%</button><button id="loadSavedFilters" type="button" hidden>Usar filtros salvos</button></div>
+        <p id="quickMessage" class="quick-message" role="status" aria-live="polite">Carregando catálogo da CAIXA...</p>
+      </section>
+      <section id="oportunidades" class="results" hidden>
+        <button id="backToSearch" class="back-search" type="button">← Nova busca simples</button>
         <div class="results-shell">
           <aside class="filter-sidebar" aria-label="Filtros de imóveis">
             <details id="filtersPanel" open>

@@ -9,6 +9,12 @@ const normalizeText = value => String(value ?? '').normalize('NFD')
 
 const els = {
   cards: document.querySelector('#cards'), count: document.querySelector('#count'),
+  results: document.querySelector('#oportunidades'),
+  quickState: document.querySelector('#quickState'), quickCity: document.querySelector('#quickCity'),
+  quickCityOptions: document.querySelector('#quickCityOptions'), quickMode: document.querySelector('#quickMode'),
+  quickType: document.querySelector('#quickType'), quickPrice: document.querySelector('#quickPrice'),
+  quickFinancing: document.querySelector('#quickFinancing'), quickDiscount: document.querySelector('#quickDiscount'),
+  quickMessage: document.querySelector('#quickMessage'), loadSaved: document.querySelector('#loadSavedFilters'),
   stateInput: document.querySelector('#stateInput'), cityInput: document.querySelector('#cityInput'),
   neighborhoodInput: document.querySelector('#neighborhoodInput'),
   stateOptions: document.querySelector('#stateOptions'), cityOptions: document.querySelector('#cityOptions'),
@@ -86,6 +92,59 @@ function fillDatalist(element, values) {
     option.value = value;
     return option;
   }));
+}
+
+function fillSelect(element, values, labelFor = value => value) {
+  const current = element.value;
+  element.querySelectorAll('option:not(:first-child)').forEach(option => option.remove());
+  for (const value of sortedUnique(values)) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = labelFor(value);
+    element.append(option);
+  }
+  element.value = [...element.options].some(option => option.value === current) ? current : '';
+}
+
+function refreshQuickCities() {
+  const cities = listings.filter(item => !els.quickState.value || item.state === els.quickState.value)
+    .map(item => item.city);
+  fillDatalist(els.quickCityOptions, cities);
+  if (els.quickCity.value && !cities.some(city => normalizeText(city) === normalizeText(els.quickCity.value))) {
+    els.quickCity.value = '';
+  }
+}
+
+function showResults() {
+  els.results.hidden = false;
+  document.querySelector('.filter-sidebar').scrollTop = 0;
+  history.replaceState(null, '', '#oportunidades');
+  els.results.scrollIntoView();
+}
+
+function applyQuickSearch() {
+  const cityTerm = normalizeText(els.quickCity.value);
+  const cityMatches = cityTerm ? sortedUnique(listings.filter(item =>
+    (!els.quickState.value || item.state === els.quickState.value)
+    && normalizeText(item.city).includes(cityTerm)).map(item => item.city)) : [];
+  if (cityTerm && (cityMatches.length === 0 || cityMatches.length > 25)) {
+    els.quickMessage.textContent = cityMatches.length ? 'Digite uma cidade mais específica.' : 'Cidade não encontrada neste estado.';
+    return;
+  }
+  restoreSettings({});
+  if (els.quickState.value) selectedStates.add(els.quickState.value);
+  cityMatches.forEach(city => selectedCities.add(normalizeText(city)));
+  for (const [container, value] of [[els.modeOptions, els.quickMode.value], [els.typeOptions, els.quickType.value]]) {
+    if (value) container.querySelectorAll('input').forEach(input => { input.checked = input.value === value; });
+  }
+  els.priceMax.value = els.quickPrice.value;
+  els.financing.checked = els.quickFinancing.classList.contains('active');
+  els.discountMin.value = els.quickDiscount.classList.contains('active') ? '30' : '';
+  els.quickMessage.textContent = '';
+  refreshLocations();
+  visibleCount = 24;
+  render();
+  showResults();
 }
 
 function refreshLocations() {
@@ -242,19 +301,51 @@ async function loadCatalog() {
     addCheckOptions(els.typeOptions, listings.map(item => item.type), 'type');
     addCheckOptions(els.modeOptions, listings.map(item => item.mode), 'mode', modeLabel);
     refreshLocations();
-    try { restoreSettings(JSON.parse(localStorage.getItem('imovel-em-disputa-filters'))); }
-    catch { /* A navegação anônima pode bloquear armazenamento local. */ }
+    fillSelect(els.quickState, listings.map(item => item.state));
+    fillSelect(els.quickMode, listings.map(item => item.mode), modeLabel);
+    fillSelect(els.quickType, listings.map(item => item.type));
+    refreshQuickCities();
+    document.querySelector('#searchButton').disabled = false;
+    els.quickMessage.textContent = '';
+    try { els.loadSaved.hidden = !localStorage.getItem('imovel-em-disputa-filters'); }
+    catch { els.loadSaved.hidden = true; }
     els.sourceStatus.textContent = `LISTA DA CAIXA · GERADA EM ${feed.generatedAt || new Date(feed.syncedAt).toLocaleDateString('pt-BR')}`;
   } catch (error) {
     els.sourceStatus.textContent = 'CATÁLOGO TEMPORARIAMENTE INDISPONÍVEL';
+    els.quickMessage.textContent = 'Não foi possível carregar a lista agora. Tente novamente mais tarde.';
     els.cards.innerHTML = '<div class="empty">Não foi possível carregar a lista agora. Consulte o portal oficial da CAIXA.</div>';
     els.more.hidden = true;
     console.error('Falha ao carregar catálogo:', error);
     return;
   }
   render();
+  if (location.hash === '#oportunidades') showResults();
 }
 
+els.quickState.addEventListener('change', refreshQuickCities);
+document.querySelector('#searchButton').addEventListener('click', applyQuickSearch);
+els.quickCity.addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); applyQuickSearch(); }
+});
+for (const button of [els.quickFinancing, els.quickDiscount]) {
+  button.addEventListener('click', () => {
+    const active = button.classList.toggle('active');
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+els.loadSaved.addEventListener('click', () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('imovel-em-disputa-filters'));
+    if (!saved) throw new Error('Nenhum filtro salvo');
+    restoreSettings(saved);
+    showResults();
+  } catch { els.quickMessage.textContent = 'Não foi possível recuperar os filtros salvos.'; }
+});
+document.querySelector('#backToSearch').addEventListener('click', () => {
+  els.results.hidden = true;
+  history.replaceState(null, '', '#busca');
+  document.querySelector('#busca').scrollIntoView();
+});
 document.querySelector('#addState').addEventListener('click', () =>
   addLocation(els.stateInput, listings.map(item => item.state), selectedStates));
 document.querySelector('#addCity').addEventListener('click', () =>
@@ -297,12 +388,14 @@ document.querySelector('#applyFilters').addEventListener('click', () => {
 document.querySelector('#saveFilters').addEventListener('click', () => {
   try { localStorage.setItem('imovel-em-disputa-filters', JSON.stringify(savedSettings()));
     els.message.textContent = 'Filtros salvos neste navegador.';
+    els.loadSaved.hidden = false;
   } catch { els.message.textContent = 'Não foi possível salvar os filtros neste navegador.'; }
 });
 document.querySelector('#clearFilters').addEventListener('click', () => {
   restoreSettings({});
   els.message.textContent = 'Filtros limpos.';
   try { localStorage.removeItem('imovel-em-disputa-filters'); } catch { /* armazenamento indisponível */ }
+  els.loadSaved.hidden = true;
 });
 els.cards.addEventListener('click', event => {
   if (event.target.closest('.detail-button')) openDetail(event.target.closest('.card').dataset.id);

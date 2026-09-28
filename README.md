@@ -20,6 +20,6 @@ O Worker publica os arquivos estáticos em `public/` no Cloudflare Workers. Muda
 
 ## Fotos e filtros
 
-As fotos são carregadas diretamente da galeria pública de cada imóvel no domínio oficial da CAIXA. Quando não há foto acessível, o cartão mostra um indicador neutro. Os filtros de estado, cidade, bairro, preço, desconto, tipo, modalidade, financiamento e área funcionam com a lista nacional; a área é extraída da descrição do CSV. Os filtros podem ser salvos no próprio navegador.
+As fotos são carregadas diretamente da galeria pública de cada imóvel no domínio oficial da CAIXA. Quando não há foto acessível, o cartão mostra um indicador neutro. A primeira tela mantém uma busca simples (estado, cidade, modalidade, tipo e valor); ao avançar para os resultados, aparecem os filtros laterais de múltiplos estados/cidades, bairro, preço, desconto, tipo, modalidade, financiamento e área. A área é extraída da descrição do CSV. Os filtros podem ser salvos no próprio navegador e retomados pela busca inicial.
 
 FGTS, condição de disputa, despesas de condomínio/IPTU e data do leilão não estão no CSV nacional. Por isso não são apresentados como filtros ativos: precisariam de enriquecimento verificável das páginas de detalhe, imóvel por imóvel.
