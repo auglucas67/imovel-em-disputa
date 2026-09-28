@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="filters.css" />
   </head>
   <body>
     <div class="notice"><span></span> Catálogo independente. Confirme sempre os dados, edital e a oferta no canal oficial.</div>
@@ -30,22 +31,35 @@
           <p>ABRANGÊNCIA</p><strong>27<span> UFs</span></strong><hr/><small>Dados da lista pública nacional da CAIXA. Confira a oferta oficial antes de decidir.</small>
         </aside>
       </section>
-      <section class="search-panel" aria-label="Filtros de pesquisa">
-        <div class="search-heading"><span>01</span><h2>O que você procura?</h2></div>
-        <div class="search-grid">
-          <label>Estado<select id="stateFilter"><option value="">Todo o Brasil</option></select></label>
-          <label>Cidade<input id="cityFilter" type="search" placeholder="Digite uma cidade" /></label>
-          <label>Modalidade<select id="modeFilter"><option value="">Todas as modalidades</option></select></label>
-          <label>Tipo<select id="typeFilter"><option value="">Todos os tipos</option></select></label>
-          <label>Faixa de valor<select id="priceFilter"><option value="">Qualquer valor</option><option value="150000">Até R$ 150 mil</option><option value="300000">Até R$ 300 mil</option><option value="500000">Até R$ 500 mil</option></select></label>
-          <button id="searchButton" class="button primary">Buscar agora <b>→</b></button>
-        </div>
-        <div class="quick-filters"><button data-quick="financing">Aceita financiamento</button><button data-quick="discount">Desconto acima de 30%</button></div>
-      </section>
       <section id="oportunidades" class="results">
-        <div class="section-title"><div><p class="eyebrow" id="sourceStatus">CARREGANDO A FONTE OFICIAL</p><h2>Oportunidades em <i>movimento</i></h2></div><div class="sort"><span id="count">0 imóveis</span><select id="sortFilter"><option value="discount">Maior desconto</option><option value="price">Menor preço</option></select></div></div>
-        <div id="cards" class="cards" aria-live="polite"></div>
-        <button id="moreButton" class="load-more">Ver mais oportunidades <span>↓</span></button>
+        <div class="results-shell">
+          <aside class="filter-sidebar" aria-label="Filtros de imóveis">
+            <details id="filtersPanel" open>
+              <summary>Filtros <span>☰</span></summary>
+              <div class="filter-content">
+                <div class="filter-group"><h3>Localização</h3>
+                  <label for="stateInput">Estados</label><div class="add-row"><input id="stateInput" list="stateOptions" placeholder="Adicionar estado" autocomplete="off" /><button id="addState" type="button" aria-label="Adicionar estado">+</button></div><datalist id="stateOptions"></datalist><div id="selectedStates" class="chips"></div>
+                  <label for="cityInput">Cidades</label><div class="add-row"><input id="cityInput" list="cityOptions" placeholder="Adicionar cidade" autocomplete="off" /><button id="addCity" type="button" aria-label="Adicionar cidade">+</button></div><datalist id="cityOptions"></datalist><div id="selectedCities" class="chips"></div>
+                  <label for="neighborhoodInput">Bairros</label><div class="add-row"><input id="neighborhoodInput" list="neighborhoodOptions" placeholder="Buscar e adicionar bairro" autocomplete="off" /><button id="addNeighborhood" type="button" aria-label="Adicionar bairro">+</button></div><datalist id="neighborhoodOptions"></datalist><div id="selectedNeighborhoods" class="chips"></div>
+                  <fieldset class="inline-options"><legend>Modo de busca por bairro</legend><label><input type="radio" name="neighborhoodMode" value="include" checked /> Incluir bairros</label><label><input type="radio" name="neighborhoodMode" value="exclude" /> Excluir bairros</label></fieldset>
+                </div>
+                <div class="filter-group"><h3>Preço de venda</h3><div class="range-pair"><label>Valor mínimo<input id="priceMin" type="number" min="0" step="1000" placeholder="R$ 0" /></label><label>Valor máximo<input id="priceMax" type="number" min="0" step="1000" placeholder="R$ 10.000.000" /></label></div></div>
+                <div class="filter-group"><h3>Desconto</h3><div class="range-pair"><label>Desconto mínimo<input id="discountMin" type="number" min="0" max="100" step="1" placeholder="0%" /></label><label>Desconto máximo<input id="discountMax" type="number" min="0" max="100" step="1" placeholder="100%" /></label></div></div>
+                <div class="filter-group"><h3>Tipo de imóvel</h3><div id="typeOptions" class="check-grid"></div></div>
+                <div class="filter-group"><h3>Modalidade</h3><div id="modeOptions" class="check-grid"></div></div>
+                <div class="filter-group"><h3>Condições</h3><label class="check-option"><input id="financingFilter" type="checkbox" /> Aceita financiamento</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Aceita FGTS</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Imóveis em disputa</label><p class="filter-hint">Os dois últimos dados exigem consulta à página de detalhe.</p></div>
+                <div class="filter-group"><h3>Área (m²)</h3><div class="range-pair"><label>Mínima<input id="areaMin" type="number" min="0" step="1" placeholder="0" /></label><label>Máxima<input id="areaMax" type="number" min="0" step="1" placeholder="Sem limite" /></label></div><p class="filter-hint">Usa a área informada na descrição do imóvel.</p></div>
+                <div class="filter-group unavailable"><h3>Despesas de condomínio</h3><label class="check-option pending-filter"><input type="checkbox" disabled /> Limitada a 10%</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Arrematante paga</label><label class="check-option pending-filter"><input type="checkbox" disabled /> CAIXA paga</label></div>
+                <div class="filter-group unavailable"><h3>Despesas de IPTU</h3><label class="check-option pending-filter"><input type="checkbox" disabled /> CAIXA paga</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Arrematante paga</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Arrematante limitado a 10%</label></div>
+                <div class="filter-group unavailable"><h3>Data do leilão</h3><input type="date" aria-label="Data do leilão ainda indisponível" disabled /><p>Estes campos não constam no CSV nacional e só serão ativados com dados oficiais verificáveis por imóvel.</p></div>
+                <div class="filter-actions"><button id="applyFilters" class="button primary" type="button">Aplicar filtros →</button><button id="saveFilters" type="button">Salvar filtros</button><button id="clearFilters" type="button">Limpar filtros</button><p id="filterMessage" role="status" aria-live="polite"></p></div>
+              </div>
+            </details>
+          </aside>
+          <div class="results-main"><div class="section-title"><div><p class="eyebrow" id="sourceStatus">CARREGANDO A FONTE OFICIAL</p><h2>Oportunidades em <i>movimento</i></h2></div><div class="sort"><span id="count">0 imóveis</span><select id="sortFilter" aria-label="Ordenar imóveis"><option value="discount">Maior desconto</option><option value="price">Menor preço</option></select></div></div>
+            <div id="cards" class="cards" aria-live="polite"></div><button id="moreButton" class="load-more">Ver mais oportunidades <span>↓</span></button>
+          </div>
+        </div>
       </section>
       <section id="como-funciona" class="process"><div class="process-intro"><p class="eyebrow">SEM PEGADINHAS</p><h2>Decida com dados.<br/><i>Compre no canal oficial.</i></h2></div><ol><li><span>01</span><div><h3>Descubra</h3><p>Use os filtros para encontrar oportunidades que fazem sentido para seu momento.</p></div></li><li><span>02</span><div><h3>Analise</h3><p>Verifique condições, ocupação, despesas e leia todo o edital antes de qualquer decisão.</p></div></li><li><span>03</span><div><h3>Participe</h3><p>Acesse a página oficial da CAIXA ou o leiloeiro indicado para fazer sua proposta.</p></div></li></ol></section>
       <section id="fonte" class="alert"><div><p class="eyebrow">DADOS PÚBLICOS, DECISÃO INFORMADA</p><h2>Confira sempre<br/><i>na fonte oficial.</i></h2></div><div class="source-copy"><p>O catálogo usa a lista nacional disponibilizada pela CAIXA. Preços, disponibilidade e condições podem mudar. Leia a página do imóvel e o edital antes de participar.</p><a class="button light" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Abrir portal da CAIXA <b>↗</b></a></div></section>
