@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "npx wrangler dev",
-    "deploy": "npx wrangler deploy"
+    "deploy": "npx wrangler deploy",
+    "sync:caixa": "node scripts/sync-caixa.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.142.0"
