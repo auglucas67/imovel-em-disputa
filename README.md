@@ -1,5 +1,7 @@
 # Imóvel em Disputa
 
+Site publicado: https://imovel-em-disputa.auglucas.workers.dev/
+
 MVP de catálogo para descoberta de imóveis ofertados pela CAIXA. O feed preserva o link oficial de cada imóvel e usa o CSV nacional público que a CAIXA publica em `venda-imoveis.caixa.gov.br/listaweb/`.
 
 ## Sincronização do catálogo
