@@ -19,6 +19,10 @@ const els = {
 let listings = [];
 let visibleCount = 24;
 let activeQuick = '';
+const catalogUrls = [
+  'https://raw.githubusercontent.com/auglucas67/imovel-em-disputa/main/public/data/listings.json',
+  '/data/listings.json',
+];
 
 function addOptions(select, values) {
   [...new Set(values)].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'))
@@ -88,10 +92,23 @@ function openDetail(id) {
 async function loadCatalog() {
   els.sourceStatus.textContent = 'CARREGANDO LISTA DA CAIXA';
   try {
-    const response = await fetch('/data/listings.json');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const feed = await response.json();
-    if (!Array.isArray(feed.listings) || feed.listings.length < 1000) throw new Error('Catálogo incompleto');
+    let feed;
+    for (const url of catalogUrls) {
+      try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const candidate = await response.json();
+        if (!Array.isArray(candidate.listings) || candidate.listings.length < 1000) {
+          throw new Error('Catálogo incompleto');
+        }
+        feed = candidate;
+        els.sourceStatus.dataset.source = url;
+        break;
+      } catch (error) {
+        console.warn(`Fonte do catálogo indisponível: ${url}`, error);
+      }
+    }
+    if (!feed) throw new Error('Nenhuma fonte do catálogo respondeu');
     listings = feed.listings;
     addOptions(els.state, listings.map(item => item.state));
     addOptions(els.mode, listings.map(item => item.mode));
