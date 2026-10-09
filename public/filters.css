@@ -49,6 +49,7 @@
 .card-photo .photo-mark,.card-photo small{display:none}
 .card-photo.fallback .photo-mark,.card-photo.fallback small{display:block}
 .card-photo.fallback img{display:none}
+.card-body .price-note{display:block;font:10px 'DM Mono',monospace;color:var(--muted);margin-top:4px}
 .card footer{padding:11px 0 0;background:transparent;grid-template-columns:none;align-items:center}
 .detail-photo{height:250px;margin:-35px -35px 12px;background:linear-gradient(135deg,#dae7d7,#a9c4b5);position:relative;overflow:hidden}
 .detail-photo img{width:100%;height:100%;object-fit:cover}

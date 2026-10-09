@@ -1,0 +1,39 @@
+name: Atualizar catálogo de outros bancos
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '45 9 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-banks
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Coletar e validar anúncios públicos
+        run: pnpm run sync:banks
+      - name: Publicar catálogo atualizado
+        run: |
+          git add public/data/banks.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'data: atualizar imóveis BB Itaú Santander'
+          git push

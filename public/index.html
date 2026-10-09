@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Encontre imóveis em disputa e venda da CAIXA com filtros claros e links para a oferta oficial." />
-    <title>Imóvel em Disputa | Oportunidades CAIXA</title>
+    <meta name="description" content="Encontre imóveis anunciados pela CAIXA, Banco do Brasil, Itaú e Santander com filtros claros e links para a oferta na fonte." />
+    <title>Imóvel em Disputa | Oportunidades de vários bancos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
@@ -21,14 +21,14 @@
     <main id="inicio">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">CATÁLOGO NACIONAL · DADOS DA CAIXA</p>
+          <p class="eyebrow">CATÁLOGO NACIONAL · CAIXA E OUTROS BANCOS</p>
           <h1>Encontre o imóvel certo <i>antes</i> da disputa.</h1>
-          <p class="lead">Uma busca mais clara para oportunidades da CAIXA. Filtre, compare e siga direto para a fonte oficial.</p>
+          <p class="lead">Uma busca mais clara para oportunidades da CAIXA, BB, Itaú e Santander. Filtre, compare e siga direto para a fonte do anúncio.</p>
           <div class="hero-actions"><a class="button primary" href="#busca">Explorar imóveis <b>↓</b></a><a class="button text" href="#como-funciona">Entenda o processo <b>→</b></a></div>
         </div>
         <aside class="hero-stat" aria-label="Abrangência do catálogo">
           <div class="stamp">OPORTUNIDADE<br/>EM FOCO</div>
-          <p>ABRANGÊNCIA</p><strong>27<span> UFs</span></strong><hr/><small>Dados da lista pública nacional da CAIXA. Confira a oferta oficial antes de decidir.</small>
+          <p>ABRANGÊNCIA</p><strong>27<span> UFs</span></strong><hr/><small>Lista nacional da CAIXA e ofertas públicas adicionais. Confira cada anúncio antes de decidir.</small>
         </aside>
       </section>
       <section id="busca" class="search-panel" aria-label="Busca inicial de imóveis">
@@ -37,12 +37,13 @@
           <label>Estado<select id="quickState"><option value="">Todo o Brasil</option></select></label>
           <label>Cidade<input id="quickCity" type="search" list="quickCityOptions" placeholder="Digite uma cidade" /><datalist id="quickCityOptions"></datalist></label>
           <label>Modalidade<select id="quickMode"><option value="">Todas as modalidades</option></select></label>
+          <label>Banco<select id="quickBank"><option value="">Todos os bancos</option></select></label>
           <label>Tipo<select id="quickType"><option value="">Todos os tipos</option></select></label>
           <label>Faixa de valor<select id="quickPrice"><option value="">Qualquer valor</option><option value="150000">Até R$ 150 mil</option><option value="300000">Até R$ 300 mil</option><option value="500000">Até R$ 500 mil</option></select></label>
           <button id="searchButton" class="button primary" type="button" disabled>Buscar agora <b>→</b></button>
         </div>
         <div class="quick-filters"><button id="quickFinancing" type="button">Aceita financiamento</button><button id="quickDiscount" type="button">Desconto acima de 30%</button><button id="loadSavedFilters" type="button" hidden>Usar filtros salvos</button></div>
-        <p id="quickMessage" class="quick-message" role="status" aria-live="polite">Carregando catálogo da CAIXA...</p>
+        <p id="quickMessage" class="quick-message" role="status" aria-live="polite">Carregando catálogo...</p>
       </section>
       <section id="oportunidades" class="results" hidden>
         <button id="backToSearch" class="back-search" type="button">← Nova busca simples</button>
@@ -57,6 +58,7 @@
                   <label for="neighborhoodInput">Bairros</label><div class="add-row"><input id="neighborhoodInput" list="neighborhoodOptions" placeholder="Buscar e adicionar bairro" autocomplete="off" /><button id="addNeighborhood" type="button" aria-label="Adicionar bairro">+</button></div><datalist id="neighborhoodOptions"></datalist><div id="selectedNeighborhoods" class="chips"></div>
                   <fieldset class="inline-options"><legend>Modo de busca por bairro</legend><label><input type="radio" name="neighborhoodMode" value="include" checked /> Incluir bairros</label><label><input type="radio" name="neighborhoodMode" value="exclude" /> Excluir bairros</label></fieldset>
                 </div>
+                <div class="filter-group"><h3>Banco anunciante</h3><div id="bankOptions" class="check-grid"></div><p class="filter-hint">Itaú e Santander: cobertura das ofertas publicadas pela Mega Leilões.</p></div>
                 <div class="filter-group"><h3>Preço de venda</h3><div class="range-pair"><label>Valor mínimo<input id="priceMin" type="number" min="0" step="1000" placeholder="R$ 0" /></label><label>Valor máximo<input id="priceMax" type="number" min="0" step="1000" placeholder="R$ 10.000.000" /></label></div></div>
                 <div class="filter-group"><h3>Desconto</h3><div class="range-pair"><label>Desconto mínimo<input id="discountMin" type="number" min="0" max="100" step="1" placeholder="0%" /></label><label>Desconto máximo<input id="discountMax" type="number" min="0" max="100" step="1" placeholder="100%" /></label></div></div>
                 <div class="filter-group"><h3>Tipo de imóvel</h3><div id="typeOptions" class="check-grid"></div></div>
@@ -76,9 +78,9 @@
         </div>
       </section>
       <section id="como-funciona" class="process"><div class="process-intro"><p class="eyebrow">SEM PEGADINHAS</p><h2>Decida com dados.<br/><i>Compre no canal oficial.</i></h2></div><ol><li><span>01</span><div><h3>Descubra</h3><p>Use os filtros para encontrar oportunidades que fazem sentido para seu momento.</p></div></li><li><span>02</span><div><h3>Analise</h3><p>Verifique condições, ocupação, despesas e leia todo o edital antes de qualquer decisão.</p></div></li><li><span>03</span><div><h3>Participe</h3><p>Acesse a página oficial da CAIXA ou o leiloeiro indicado para fazer sua proposta.</p></div></li></ol></section>
-      <section id="fonte" class="alert"><div><p class="eyebrow">DADOS PÚBLICOS, DECISÃO INFORMADA</p><h2>Confira sempre<br/><i>na fonte oficial.</i></h2></div><div class="source-copy"><p>O catálogo usa a lista nacional disponibilizada pela CAIXA. Preços, disponibilidade e condições podem mudar. Leia a página do imóvel e o edital antes de participar.</p><a class="button light" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Abrir portal da CAIXA <b>↗</b></a></div></section>
+      <section id="fonte" class="alert"><div><p class="eyebrow">DADOS PÚBLICOS, DECISÃO INFORMADA</p><h2>Confira sempre<br/><i>na fonte oficial.</i></h2></div><div class="source-copy"><p>CAIXA: lista nacional pública. BB: Seu Imóvel BB. Itaú e Santander: ofertas publicadas pela Mega Leilões, com cobertura parcial. Preços e disponibilidade podem mudar; leia sempre a página original e o edital.</p><a class="button light" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Abrir portal da CAIXA <b>↗</b></a></div></section>
     </main>
-    <footer><div class="brand"><i></i><strong>imóvel</strong><em>em disputa</em></div><p>Plataforma independente de descoberta de imóveis. Não somos a CAIXA nem realizamos leilões, propostas ou pagamentos.</p><a href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Portal oficial da CAIXA ↗</a><small>© <span id="year"></span> Imóvel em Disputa</small></footer>
+    <footer><div class="brand"><i></i><strong>imóvel</strong><em>em disputa</em></div><p>Plataforma independente de descoberta de imóveis. Não somos representantes dos bancos ou leiloeiros e não realizamos leilões, propostas ou pagamentos.</p><a href="https://www.seuimovelbb.com.br/catalogo" target="_blank" rel="noreferrer">Portal de imóveis BB ↗</a><small>© <span id="year"></span> Imóvel em Disputa</small></footer>
     <dialog id="detailDialog"><button class="close" aria-label="Fechar">×</button><div id="detailContent"></div></dialog>
     <script src="app.js"></script>
   </body>

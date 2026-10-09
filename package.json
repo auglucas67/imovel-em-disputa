@@ -6,9 +6,13 @@
   "scripts": {
     "dev": "npx wrangler dev",
     "deploy": "npx wrangler deploy",
-    "sync:caixa": "pwsh -File scripts/download-caixa.ps1"
+    "sync:caixa": "pwsh -File scripts/download-caixa.ps1",
+    "sync:banks": "node scripts/sync-banks.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.142.0"
+  },
+  "dependencies": {
+    "cheerio": "1.1.2"
   }
 }

@@ -12,7 +12,8 @@ const els = {
   results: document.querySelector('#oportunidades'),
   quickState: document.querySelector('#quickState'), quickCity: document.querySelector('#quickCity'),
   quickCityOptions: document.querySelector('#quickCityOptions'), quickMode: document.querySelector('#quickMode'),
-  quickType: document.querySelector('#quickType'), quickPrice: document.querySelector('#quickPrice'),
+  quickType: document.querySelector('#quickType'), quickBank: document.querySelector('#quickBank'),
+  quickPrice: document.querySelector('#quickPrice'),
   quickFinancing: document.querySelector('#quickFinancing'), quickDiscount: document.querySelector('#quickDiscount'),
   quickMessage: document.querySelector('#quickMessage'), loadSaved: document.querySelector('#loadSavedFilters'),
   stateInput: document.querySelector('#stateInput'), cityInput: document.querySelector('#cityInput'),
@@ -22,6 +23,7 @@ const els = {
   selectedStates: document.querySelector('#selectedStates'), selectedCities: document.querySelector('#selectedCities'),
   selectedNeighborhoods: document.querySelector('#selectedNeighborhoods'),
   typeOptions: document.querySelector('#typeOptions'), modeOptions: document.querySelector('#modeOptions'),
+  bankOptions: document.querySelector('#bankOptions'),
   financing: document.querySelector('#financingFilter'),
   priceMin: document.querySelector('#priceMin'), priceMax: document.querySelector('#priceMax'),
   discountMin: document.querySelector('#discountMin'), discountMax: document.querySelector('#discountMax'),
@@ -40,13 +42,18 @@ const catalogUrls = [
   'https://raw.githubusercontent.com/auglucas67/imovel-em-disputa/main/public/data/listings.json',
   '/data/listings.json',
 ];
+const bankCatalogUrls = [
+  'https://raw.githubusercontent.com/auglucas67/imovel-em-disputa/main/public/data/banks.json',
+  '/data/banks.json',
+];
 
 const sortedUnique = values => [...new Set(values)].filter(Boolean)
   .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 const numericFilter = input => input.value === '' ? null : Number(input.value);
 const checkedValues = container => new Set([...container.querySelectorAll('input:checked')].map(input => input.value));
-const photoUrl = id => /^\d{1,13}$/.test(id)
-  ? `https://venda-imoveis.caixa.gov.br/fotos/F${id.padStart(13, '0')}21.jpg` : '';
+const photoUrl = item => item.bank !== 'CAIXA' ? item.imageUrl || ''
+  : /^\d{1,13}$/.test(item.id)
+    ? `https://venda-imoveis.caixa.gov.br/fotos/F${item.id.padStart(13, '0')}21.jpg` : '';
 const modeLabel = mode => ({
   'Leilão SFI - Edital Único': 'Leilão SFI',
   'Venda Direta Online': 'Compra Direta',
@@ -64,6 +71,7 @@ function areaFromDescription(description) {
 function filtered() {
   const types = checkedValues(els.typeOptions);
   const modes = checkedValues(els.modeOptions);
+  const banks = checkedValues(els.bankOptions);
   const neighborhoodMode = document.querySelector('input[name="neighborhoodMode"]:checked').value;
   const priceMin = numericFilter(els.priceMin), priceMax = numericFilter(els.priceMax);
   const discountMin = numericFilter(els.discountMin), discountMax = numericFilter(els.discountMax);
@@ -75,15 +83,16 @@ function filtered() {
       ? selectedNeighborhoods.has(item._neighborhoodKey) : !selectedNeighborhoods.has(item._neighborhoodKey)))
     && (!types.size || types.has(item.type))
     && (!modes.size || modes.has(item.mode))
+    && (!banks.size || banks.has(item.bank))
     && (!els.financing.checked || item.financing)
     && (priceMin === null || item.price >= priceMin)
     && (priceMax === null || item.price <= priceMax)
-    && (discountMin === null || item.discount >= discountMin)
-    && (discountMax === null || item.discount <= discountMax)
+    && (discountMin === null || item.discount !== null && item.discount >= discountMin)
+    && (discountMax === null || item.discount !== null && item.discount <= discountMax)
     && (areaMin === null || item._area !== null && item._area >= areaMin)
     && (areaMax === null || item._area !== null && item._area <= areaMax));
   return items.sort((a, b) => els.sort.value === 'price'
-    ? a.price - b.price : b.discount - a.discount);
+    ? a.price - b.price : (b.discount ?? -1) - (a.discount ?? -1));
 }
 
 function fillDatalist(element, values) {
@@ -137,6 +146,9 @@ function applyQuickSearch() {
   for (const [container, value] of [[els.modeOptions, els.quickMode.value], [els.typeOptions, els.quickType.value]]) {
     if (value) container.querySelectorAll('input').forEach(input => { input.checked = input.value === value; });
   }
+  if (els.quickBank.value) els.bankOptions.querySelectorAll('input').forEach(input => {
+    input.checked = input.value === els.quickBank.value;
+  });
   els.priceMax.value = els.quickPrice.value;
   els.financing.checked = els.quickFinancing.classList.contains('active');
   els.discountMin.value = els.quickDiscount.classList.contains('active') ? '30' : '';
@@ -203,6 +215,7 @@ function savedSettings() {
     states: [...selectedStates], cities: [...selectedCities], neighborhoods: [...selectedNeighborhoods],
     neighborhoodMode: document.querySelector('input[name="neighborhoodMode"]:checked').value,
     types: [...checkedValues(els.typeOptions)], modes: [...checkedValues(els.modeOptions)],
+    banks: [...checkedValues(els.bankOptions)],
     financing: els.financing.checked, sort: els.sort.value,
     priceMin: els.priceMin.value, priceMax: els.priceMax.value,
     discountMin: els.discountMin.value, discountMax: els.discountMax.value,
@@ -217,7 +230,8 @@ function restoreSettings(settings) {
     target.clear();
     if (Array.isArray(values)) values.filter(value => typeof value === 'string').forEach(value => target.add(value));
   }
-  for (const [container, values] of [[els.typeOptions, settings.types], [els.modeOptions, settings.modes]]) {
+  for (const [container, values] of [[els.typeOptions, settings.types], [els.modeOptions, settings.modes],
+    [els.bankOptions, settings.banks]]) {
     container.querySelectorAll('input').forEach(input => { input.checked = Array.isArray(values) && values.includes(input.value); });
   }
   for (const name of ['priceMin', 'priceMax', 'discountMin', 'discountMax', 'areaMin', 'areaMax']) {
@@ -236,18 +250,18 @@ function render() {
   els.count.textContent = `${items.length.toLocaleString('pt-BR')} ${items.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}`;
   els.cards.innerHTML = items.length ? items.slice(0, visibleCount).map(item => `
     <article class="card" data-id="${escapeHtml(item.id)}">
-      <div class="card-photo" aria-label="Foto oficial da CAIXA, quando disponível">
-        <img src="${photoUrl(item.id)}" alt="Foto do imóvel ${escapeHtml(item.id)}" loading="lazy" referrerpolicy="no-referrer" />
-        <span>${Number(item.discount).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% OFF</span>
+      <div class="card-photo${photoUrl(item) ? '' : ' fallback'}" aria-label="Foto do anúncio, quando disponível">
+        ${photoUrl(item) ? `<img src="${escapeHtml(photoUrl(item))}" alt="Foto do imóvel ${escapeHtml(item.id)}" loading="lazy" referrerpolicy="no-referrer" />` : ''}
+        ${item.discount !== null ? `<span>${Number(item.discount).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% OFF</span>` : ''}
         <div class="photo-mark">${escapeHtml(item.type.slice(0, 1))}</div>
         <small>Foto indisponível</small>
       </div>
       <div class="card-body">
         <p>${escapeHtml(item.city)}, ${escapeHtml(item.state)} <small>· ${escapeHtml(item.neighborhood)}</small></p>
         <h3>${escapeHtml(item.type)}</h3>
-        <div class="tags">${item.financing ? '<b>Financiamento</b>' : ''}<b>CAIXA</b></div>
+        <div class="tags">${item.financing ? '<b>Financiamento</b>' : ''}<b>${escapeHtml(item.bank)}</b></div>
         <strong>${money(item.price)}</strong>
-        <del>Valor de avaliação ${money(item.appraisal)}</del>
+        ${item.appraisal ? `<del>Valor de avaliação ${money(item.appraisal)}</del>` : '<small class="price-note">Preço anunciado na fonte</small>'}
         <footer><span>${escapeHtml(item.mode)}</span><button class="detail-button" type="button">Ver detalhes <i>→</i></button></footer>
       </div>
     </article>`).join('')
@@ -259,18 +273,21 @@ function openDetail(id) {
   const item = listings.find(listing => listing.id === id);
   if (!item) return;
   const officialUrl = new URL(item.officialUrl);
-  if (officialUrl.hostname !== 'venda-imoveis.caixa.gov.br') return;
+  if (officialUrl.protocol !== 'https:' || ![
+    'venda-imoveis.caixa.gov.br', 'www.seuimovelbb.com.br', 'www.megaleiloes.com.br',
+  ].includes(officialUrl.hostname)) return;
   document.querySelector('#detailContent').innerHTML = `
-    <div class="detail-photo"><img src="${photoUrl(item.id)}" alt="Foto do imóvel ${escapeHtml(item.id)}" referrerpolicy="no-referrer" /><span>Foto indisponível · consulte a CAIXA</span></div>
+    <div class="detail-photo${photoUrl(item) ? '' : ' fallback'}">${photoUrl(item) ? `<img src="${escapeHtml(photoUrl(item))}" alt="Foto do imóvel ${escapeHtml(item.id)}" referrerpolicy="no-referrer" />` : ''}<span>Foto indisponível · consulte a fonte</span></div>
     <p class="eyebrow">${escapeHtml(item.mode.toUpperCase())} · Nº ${escapeHtml(item.id)}</p>
     <h2>${escapeHtml(item.type)} em ${escapeHtml(item.city)}, ${escapeHtml(item.state)}</h2>
-    <p>${escapeHtml(item.neighborhood)} · ${escapeHtml(item.address)}</p>
+    ${item.neighborhood || item.address ? `<p>${escapeHtml([item.neighborhood, item.address].filter(Boolean).join(' · '))}</p>` : ''}
     <strong>${money(item.price)}</strong>
-    <p>Valor de avaliação: ${money(item.appraisal)} · desconto informado: ${Number(item.discount).toLocaleString('pt-BR')}%</p>
-    <p>${escapeHtml(item.description)}</p>
+    ${item.appraisal ? `<p>Valor de avaliação: ${money(item.appraisal)} · desconto informado: ${Number(item.discount).toLocaleString('pt-BR')}%</p>` : ''}
+    ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}
+    ${item.auctionDate ? `<p>${escapeHtml(item.auctionDate)}</p>` : ''}
     ${item._area ? `<p>Área informada: ${item._area.toLocaleString('pt-BR')} m²</p>` : ''}
-    <a class="button primary" href="${escapeHtml(officialUrl.href)}" target="_blank" rel="noopener noreferrer">Abrir este imóvel na CAIXA ↗</a>
-    <small>Confirme preço, disponibilidade, edital e condições no portal da CAIXA.</small>`;
+    <a class="button primary" href="${escapeHtml(officialUrl.href)}" target="_blank" rel="noopener noreferrer">Abrir anúncio na fonte ↗</a>
+    <small>Fonte: ${escapeHtml(item.sourceName || item.bank)}. Confirme preço, disponibilidade, edital e condições antes de participar.</small>`;
   els.dialog.showModal();
 }
 
@@ -294,22 +311,48 @@ async function loadCatalog() {
       }
     }
     if (!feed) throw new Error('Nenhuma fonte do catálogo respondeu');
-    listings = feed.listings.map(item => ({ ...item,
+    let bankItems = [];
+    let bankFeedTime = '';
+    for (const url of bankCatalogUrls) {
+      try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const candidate = await response.json();
+        const age = Date.now() - Date.parse(candidate.syncedAt);
+        if (!Array.isArray(candidate.listings) || candidate.listings.length < 10
+          || !Number.isFinite(age) || age < 0 || age > 72 * 60 * 60 * 1000) {
+          throw new Error('Catálogo de outros bancos ausente ou desatualizado');
+        }
+        bankItems = candidate.listings.filter(item => ['Banco do Brasil', 'Itaú', 'Santander'].includes(item.bank)
+          && Number.isFinite(item.price) && item.price > 0
+          && /^https:\/\/(www\.seuimovelbb\.com\.br|www\.megaleiloes\.com\.br)\//.test(item.officialUrl));
+        bankFeedTime = new Date(candidate.syncedAt).toLocaleDateString('pt-BR');
+        break;
+      } catch (error) {
+        console.warn(`Catálogo de outros bancos indisponível: ${url}`, error);
+      }
+    }
+    listings = [...feed.listings.map(item => ({ ...item, bank: 'CAIXA', sourceName: 'CAIXA' })),
+      ...bankItems].map(item => ({ ...item,
       _cityKey: normalizeText(item.city), _neighborhoodKey: normalizeText(item.neighborhood),
       _area: areaFromDescription(item.description || ''),
     }));
     addCheckOptions(els.typeOptions, listings.map(item => item.type), 'type');
     addCheckOptions(els.modeOptions, listings.map(item => item.mode), 'mode', modeLabel);
+    addCheckOptions(els.bankOptions, listings.map(item => item.bank), 'bank');
     refreshLocations();
     fillSelect(els.quickState, listings.map(item => item.state));
     fillSelect(els.quickMode, listings.map(item => item.mode), modeLabel);
     fillSelect(els.quickType, listings.map(item => item.type));
+    fillSelect(els.quickBank, listings.map(item => item.bank));
     refreshQuickCities();
     document.querySelector('#searchButton').disabled = false;
     els.quickMessage.textContent = '';
     try { els.loadSaved.hidden = !localStorage.getItem('imovel-em-disputa-filters'); }
     catch { els.loadSaved.hidden = true; }
-    els.sourceStatus.textContent = `LISTA DA CAIXA · GERADA EM ${feed.generatedAt || new Date(feed.syncedAt).toLocaleDateString('pt-BR')}`;
+    els.sourceStatus.textContent = bankItems.length
+      ? `CAIXA + BB + ITAÚ + SANTANDER · ATUALIZADO EM ${bankFeedTime}`
+      : `LISTA DA CAIXA · GERADA EM ${feed.generatedAt || new Date(feed.syncedAt).toLocaleDateString('pt-BR')} · OUTROS BANCOS INDISPONÍVEIS`;
   } catch (error) {
     els.sourceStatus.textContent = 'CATÁLOGO TEMPORARIAMENTE INDISPONÍVEL';
     els.quickMessage.textContent = 'Não foi possível carregar a lista agora. Tente novamente mais tarde.';
@@ -369,7 +412,7 @@ document.querySelector('.filter-content').addEventListener('click', event => {
     .delete(button.dataset.value);
   refreshLocations(); visibleCount = 24; render();
 });
-[els.typeOptions, els.modeOptions, els.financing, els.sort,
+[els.typeOptions, els.modeOptions, els.bankOptions, els.financing, els.sort,
   ...document.querySelectorAll('input[name="neighborhoodMode"]')].forEach(element =>
   element.addEventListener('change', () => { visibleCount = 24; render(); }));
 document.querySelector('#applyFilters').addEventListener('click', () => {
