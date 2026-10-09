@@ -29,4 +29,10 @@ O Worker publica os arquivos estáticos em `public/` no Cloudflare Workers. Muda
 
 As fotos são carregadas da galeria pública da CAIXA ou do anúncio de origem de BB/Mega Leilões. Quando não há foto acessível, o cartão mostra um indicador neutro. A primeira tela mantém uma busca simples (estado, cidade, banco, modalidade, tipo e valor); ao avançar para os resultados, aparecem os filtros laterais de banco, múltiplos estados/cidades, bairro, preço, desconto, tipo, modalidade, financiamento e área. A área é extraída da descrição quando disponível. Os filtros podem ser salvos no próprio navegador e retomados pela busca inicial.
 
-FGTS, condição de disputa, despesas de condomínio/IPTU e data do leilão não estão no CSV nacional. Por isso não são apresentados como filtros ativos: precisariam de enriquecimento verificável das páginas de detalhe, imóvel por imóvel.
+FGTS, condição de disputa, despesas de condomínio/IPTU e data do leilão não estão no CSV nacional. FGTS e disputa são filtráveis apenas onde há confirmação adicional, descrita abaixo; os demais campos continuam indisponíveis sem uma fonte verificável por imóvel.
+
+## Compartilhamento e condições verificadas
+
+O detalhe de cada imóvel oferece compartilhamento por WhatsApp e cópia de um link direto (`?imovel=ID`). O link abre a ficha correspondente no site; a mensagem do WhatsApp também inclui o anúncio de origem para conferência. O menu no cabeçalho reúne os portais da CAIXA, BB, Itaú e Santander (este via Mega Leilões).
+
+Os filtros **Aceita FGTS** e **Imóveis em disputa** têm cobertura parcial, explicitamente indicada na lateral. FGTS só é marcado quando a página individual da CAIXA informa que permite sua utilização. As confirmações ficam em `public/data/conditions.json`, expiram após sete dias e são revalidadas em baixa frequência por `scripts/sync-conditions.mjs` junto com a sincronização da CAIXA. Se a CAIXA bloquear a consulta, não inferimos a condição. "Em disputa" exige oferta aberta com ao menos um lance registrado no catálogo da Mega Leilões; isso não cobre o status de disputa da CAIXA ou do BB. A ausência nos resultados desses filtros não prova que o imóvel não tenha a condição. O filtro de financiamento continua usando apenas a confirmação presente no CSV da CAIXA.

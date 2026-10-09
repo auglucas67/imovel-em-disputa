@@ -25,6 +25,7 @@ const els = {
   typeOptions: document.querySelector('#typeOptions'), modeOptions: document.querySelector('#modeOptions'),
   bankOptions: document.querySelector('#bankOptions'),
   financing: document.querySelector('#financingFilter'),
+  fgts: document.querySelector('#fgtsFilter'), dispute: document.querySelector('#disputeFilter'),
   priceMin: document.querySelector('#priceMin'), priceMax: document.querySelector('#priceMax'),
   discountMin: document.querySelector('#discountMin'), discountMax: document.querySelector('#discountMax'),
   areaMin: document.querySelector('#areaMin'), areaMax: document.querySelector('#areaMax'),
@@ -45,6 +46,10 @@ const catalogUrls = [
 const bankCatalogUrls = [
   'https://raw.githubusercontent.com/auglucas67/imovel-em-disputa/main/public/data/banks.json',
   '/data/banks.json',
+];
+const conditionCatalogUrls = [
+  'https://raw.githubusercontent.com/auglucas67/imovel-em-disputa/main/public/data/conditions.json',
+  '/data/conditions.json',
 ];
 
 const sortedUnique = values => [...new Set(values)].filter(Boolean)
@@ -85,6 +90,9 @@ function filtered() {
     && (!modes.size || modes.has(item.mode))
     && (!banks.size || banks.has(item.bank))
     && (!els.financing.checked || item.financing)
+    && (!els.fgts.checked || item.fgts === true)
+    && (!els.dispute.checked || item.inDispute === true
+      && Date.parse(item.auctionEndsAt) > Date.now())
     && (priceMin === null || item.price >= priceMin)
     && (priceMax === null || item.price <= priceMax)
     && (discountMin === null || item.discount !== null && item.discount >= discountMin)
@@ -216,7 +224,8 @@ function savedSettings() {
     neighborhoodMode: document.querySelector('input[name="neighborhoodMode"]:checked').value,
     types: [...checkedValues(els.typeOptions)], modes: [...checkedValues(els.modeOptions)],
     banks: [...checkedValues(els.bankOptions)],
-    financing: els.financing.checked, sort: els.sort.value,
+    financing: els.financing.checked, fgts: els.fgts.checked,
+    dispute: els.dispute.checked, sort: els.sort.value,
     priceMin: els.priceMin.value, priceMax: els.priceMax.value,
     discountMin: els.discountMin.value, discountMax: els.discountMax.value,
     areaMin: els.areaMin.value, areaMax: els.areaMax.value,
@@ -238,6 +247,8 @@ function restoreSettings(settings) {
     els[name].value = settings[name] ?? '';
   }
   els.financing.checked = Boolean(settings.financing);
+  els.fgts.checked = Boolean(settings.fgts);
+  els.dispute.checked = Boolean(settings.dispute);
   els.sort.value = settings.sort === 'price' ? 'price' : 'discount';
   document.querySelector(`input[name="neighborhoodMode"][value="${settings.neighborhoodMode === 'exclude' ? 'exclude' : 'include'}"]`).checked = true;
   refreshLocations();
@@ -265,7 +276,9 @@ function render() {
         <footer><span>${escapeHtml(item.mode)}</span><button class="detail-button" type="button">Ver detalhes <i>→</i></button></footer>
       </div>
     </article>`).join('')
-    : '<div class="empty">Nenhum imóvel encontrado. Ajuste os filtros e tente novamente.</div>';
+    : `<div class="empty">${els.fgts.checked || els.dispute.checked
+      ? 'Nenhum imóvel com essa condição confirmada nas fontes consultadas. A cobertura destes filtros é parcial; confira também o anúncio original.'
+      : 'Nenhum imóvel encontrado. Ajuste os filtros e tente novamente.'}</div>`;
   els.more.hidden = items.length <= visibleCount;
 }
 
@@ -276,6 +289,10 @@ function openDetail(id) {
   if (officialUrl.protocol !== 'https:' || ![
     'venda-imoveis.caixa.gov.br', 'www.seuimovelbb.com.br', 'www.megaleiloes.com.br',
   ].includes(officialUrl.hostname)) return;
+  const shareUrl = new URL(location.pathname, location.origin);
+  shareUrl.searchParams.set('imovel', item.id);
+  const shareText = `${item.type} em ${item.city}/${item.state} por ${money(item.price)} — ${item.bank}. Veja no catálogo: ${shareUrl.href}\nAnúncio na fonte: ${officialUrl.href}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
   document.querySelector('#detailContent').innerHTML = `
     <div class="detail-photo${photoUrl(item) ? '' : ' fallback'}">${photoUrl(item) ? `<img src="${escapeHtml(photoUrl(item))}" alt="Foto do imóvel ${escapeHtml(item.id)}" referrerpolicy="no-referrer" />` : ''}<span>Foto indisponível · consulte a fonte</span></div>
     <p class="eyebrow">${escapeHtml(item.mode.toUpperCase())} · Nº ${escapeHtml(item.id)}</p>
@@ -286,6 +303,9 @@ function openDetail(id) {
     ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}
     ${item.auctionDate ? `<p>${escapeHtml(item.auctionDate)}</p>` : ''}
     ${item._area ? `<p>Área informada: ${item._area.toLocaleString('pt-BR')} m²</p>` : ''}
+    ${item.fgts === true ? '<p class="verified-condition">✓ FGTS permitido na página individual da CAIXA. Confirme seu enquadramento.</p>' : ''}
+    ${item.inDispute === true ? `<p class="verified-condition">✓ ${item.bidCount} ${item.bidCount === 1 ? 'lance registrado' : 'lances registrados'} na oferta aberta.</p>` : ''}
+    <div class="share-box"><strong>Compartilhe este imóvel</strong><p>Envie o link desta ficha para alguém analisar com você.</p><div class="share-actions"><a class="share-whatsapp" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener noreferrer">Enviar pelo WhatsApp ↗</a><button type="button" id="copyShareLink" data-link="${escapeHtml(shareUrl.href)}">Copiar link</button></div><small id="shareFeedback" role="status" aria-live="polite"></small></div>
     <a class="button primary" href="${escapeHtml(officialUrl.href)}" target="_blank" rel="noopener noreferrer">Abrir anúncio na fonte ↗</a>
     <small>Fonte: ${escapeHtml(item.sourceName || item.bank)}. Confirme preço, disponibilidade, edital e condições antes de participar.</small>`;
   els.dialog.showModal();
@@ -311,6 +331,22 @@ async function loadCatalog() {
       }
     }
     if (!feed) throw new Error('Nenhuma fonte do catálogo respondeu');
+    let fgtsConfirmed = new Set();
+    for (const url of conditionCatalogUrls) {
+      try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const candidate = await response.json();
+        if (!candidate.fgtsConfirmed || typeof candidate.fgtsConfirmed !== 'object') throw new Error('Condições inválidas');
+        fgtsConfirmed = new Set(Object.entries(candidate.fgtsConfirmed)
+          .filter(([id, checkedAt]) => /^\d{1,13}$/.test(id)
+            && Date.now() - Date.parse(checkedAt) <= 7 * 24 * 60 * 60 * 1000)
+          .map(([id]) => id));
+        break;
+      } catch (error) {
+        console.warn(`Condições individuais indisponíveis: ${url}`, error);
+      }
+    }
     let bankItems = [];
     let bankFeedTime = '';
     for (const url of bankCatalogUrls) {
@@ -325,6 +361,7 @@ async function loadCatalog() {
         }
         bankItems = candidate.listings.filter(item => ['Banco do Brasil', 'Itaú', 'Santander'].includes(item.bank)
           && Number.isFinite(item.price) && item.price > 0
+          && (!item.auctionEndsAt || Date.parse(item.auctionEndsAt) > Date.now())
           && /^https:\/\/(www\.seuimovelbb\.com\.br|www\.megaleiloes\.com\.br)\//.test(item.officialUrl));
         bankFeedTime = new Date(candidate.syncedAt).toLocaleDateString('pt-BR');
         break;
@@ -332,7 +369,8 @@ async function loadCatalog() {
         console.warn(`Catálogo de outros bancos indisponível: ${url}`, error);
       }
     }
-    listings = [...feed.listings.map(item => ({ ...item, bank: 'CAIXA', sourceName: 'CAIXA' })),
+    listings = [...feed.listings.map(item => ({ ...item, bank: 'CAIXA', sourceName: 'CAIXA',
+      fgts: fgtsConfirmed.has(item.id), inDispute: null })),
       ...bankItems].map(item => ({ ...item,
       _cityKey: normalizeText(item.city), _neighborhoodKey: normalizeText(item.neighborhood),
       _area: areaFromDescription(item.description || ''),
@@ -340,6 +378,10 @@ async function loadCatalog() {
     addCheckOptions(els.typeOptions, listings.map(item => item.type), 'type');
     addCheckOptions(els.modeOptions, listings.map(item => item.mode), 'mode', modeLabel);
     addCheckOptions(els.bankOptions, listings.map(item => item.bank), 'bank');
+    const fgtsCount = listings.filter(item => item.fgts === true).length;
+    const disputeCount = listings.filter(item => item.inDispute === true
+      && Date.parse(item.auctionEndsAt) > Date.now()).length;
+    document.querySelector('#conditionsCoverage').textContent = `Cobertura parcial verificada: ${fgtsCount} imóveis com FGTS explicitamente permitido na CAIXA e ${disputeCount} ofertas abertas com lances registrados na Mega Leilões. Ausência no resultado não significa que a condição não se aplique. Confirme no anúncio original.`;
     refreshLocations();
     fillSelect(els.quickState, listings.map(item => item.state));
     fillSelect(els.quickMode, listings.map(item => item.mode), modeLabel);
@@ -362,7 +404,11 @@ async function loadCatalog() {
     return;
   }
   render();
-  if (location.hash === '#oportunidades') showResults();
+  const sharedId = new URLSearchParams(location.search).get('imovel');
+  if (sharedId && listings.some(item => item.id === sharedId)) {
+    showResults();
+    openDetail(sharedId);
+  } else if (location.hash === '#oportunidades') showResults();
 }
 
 els.quickState.addEventListener('change', refreshQuickCities);
@@ -412,7 +458,7 @@ document.querySelector('.filter-content').addEventListener('click', event => {
     .delete(button.dataset.value);
   refreshLocations(); visibleCount = 24; render();
 });
-[els.typeOptions, els.modeOptions, els.bankOptions, els.financing, els.sort,
+[els.typeOptions, els.modeOptions, els.bankOptions, els.financing, els.fgts, els.dispute, els.sort,
   ...document.querySelectorAll('input[name="neighborhoodMode"]')].forEach(element =>
   element.addEventListener('change', () => { visibleCount = 24; render(); }));
 document.querySelector('#applyFilters').addEventListener('click', () => {
@@ -442,6 +488,21 @@ document.querySelector('#clearFilters').addEventListener('click', () => {
 });
 els.cards.addEventListener('click', event => {
   if (event.target.closest('.detail-button')) openDetail(event.target.closest('.card').dataset.id);
+});
+document.querySelector('#detailContent').addEventListener('click', async event => {
+  const button = event.target.closest('#copyShareLink');
+  if (!button) return;
+  const feedback = document.querySelector('#shareFeedback');
+  try {
+    await navigator.clipboard.writeText(button.dataset.link);
+    feedback.textContent = 'Link copiado. Agora você pode enviar para quem quiser.';
+  } catch {
+    feedback.textContent = 'Não foi possível copiar automaticamente. Use o botão do WhatsApp para compartilhar.';
+  }
+});
+document.addEventListener('click', event => {
+  const menu = document.querySelector('#portalMenu');
+  if (menu.open && !menu.contains(event.target)) menu.open = false;
 });
 for (const container of [els.cards, document.querySelector('#detailContent')]) {
   container.addEventListener('error', event => {

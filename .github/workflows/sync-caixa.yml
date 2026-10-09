@@ -25,10 +25,13 @@ jobs:
       - name: Baixar e validar CSV nacional da CAIXA
         shell: pwsh
         run: ./scripts/download-caixa.ps1
+      - name: Revalidar condições individuais disponíveis
+        shell: pwsh
+        run: node scripts/sync-conditions.mjs
       - name: Publicar catálogo atualizado no repositório
         shell: pwsh
         run: |
-          git add public/data/listings.json
+          git add public/data/listings.json public/data/conditions.json
           if (git diff --cached --quiet) { exit 0 }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

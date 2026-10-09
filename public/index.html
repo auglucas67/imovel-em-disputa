@@ -16,7 +16,15 @@
     <header class="header">
       <a class="brand" href="#inicio" aria-label="Imóvel em Disputa - início"><i></i><strong>imóvel</strong><em>em disputa</em></a>
       <nav><a href="#busca">Oportunidades</a><a href="#como-funciona">Como funciona</a><a href="#fonte">Fonte dos dados</a></nav>
-      <a class="header-cta" href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noreferrer">Portal da CAIXA <b>↗</b></a>
+      <details class="portal-menu" id="portalMenu">
+        <summary class="header-cta">Portais dos bancos <b>▾</b></summary>
+        <div class="portal-menu-list">
+          <a href="https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp" target="_blank" rel="noopener noreferrer">CAIXA <span>↗</span></a>
+          <a href="https://www.seuimovelbb.com.br/catalogo" target="_blank" rel="noopener noreferrer">Banco do Brasil <span>↗</span></a>
+          <a href="https://www.itau.com.br/imoveis-itau/" target="_blank" rel="noopener noreferrer">Itaú <span>↗</span></a>
+          <a href="https://www.megaleiloes.com.br/imoveis?banco=2" target="_blank" rel="noopener noreferrer">Santander <small>via Mega Leilões</small> <span>↗</span></a>
+        </div>
+      </details>
     </header>
     <main id="inicio">
       <section class="hero">
@@ -63,7 +71,7 @@
                 <div class="filter-group"><h3>Desconto</h3><div class="range-pair"><label>Desconto mínimo<input id="discountMin" type="number" min="0" max="100" step="1" placeholder="0%" /></label><label>Desconto máximo<input id="discountMax" type="number" min="0" max="100" step="1" placeholder="100%" /></label></div></div>
                 <div class="filter-group"><h3>Tipo de imóvel</h3><div id="typeOptions" class="check-grid"></div></div>
                 <div class="filter-group"><h3>Modalidade</h3><div id="modeOptions" class="check-grid"></div></div>
-                <div class="filter-group"><h3>Condições</h3><label class="check-option"><input id="financingFilter" type="checkbox" /> Aceita financiamento</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Aceita FGTS</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Imóveis em disputa</label><p class="filter-hint">Os dois últimos dados exigem consulta à página de detalhe.</p></div>
+                <div class="filter-group"><h3>Condições</h3><label class="check-option"><input id="financingFilter" type="checkbox" /> Aceita financiamento</label><label class="check-option"><input id="fgtsFilter" type="checkbox" /> Aceita FGTS <span class="partial-label">verificados</span></label><label class="check-option"><input id="disputeFilter" type="checkbox" /> Imóveis em disputa <span class="partial-label">lances confirmados</span></label><p class="filter-hint" id="conditionsCoverage">Cobertura parcial: estes filtros mostram apenas anúncios cuja condição foi verificada na fonte. A ausência no resultado não significa que o imóvel não aceite FGTS ou não tenha disputa.</p></div>
                 <div class="filter-group"><h3>Área (m²)</h3><div class="range-pair"><label>Mínima<input id="areaMin" type="number" min="0" step="1" placeholder="0" /></label><label>Máxima<input id="areaMax" type="number" min="0" step="1" placeholder="Sem limite" /></label></div><p class="filter-hint">Usa a área informada na descrição do imóvel.</p></div>
                 <div class="filter-group unavailable"><h3>Despesas de condomínio</h3><label class="check-option pending-filter"><input type="checkbox" disabled /> Limitada a 10%</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Arrematante paga</label><label class="check-option pending-filter"><input type="checkbox" disabled /> CAIXA paga</label></div>
                 <div class="filter-group unavailable"><h3>Despesas de IPTU</h3><label class="check-option pending-filter"><input type="checkbox" disabled /> CAIXA paga</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Arrematante paga</label><label class="check-option pending-filter"><input type="checkbox" disabled /> Arrematante limitado a 10%</label></div>

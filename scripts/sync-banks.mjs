@@ -40,7 +40,7 @@ async function bbPage(page) {
     const event = clean(card.find('.leilao:not(.d-none)').first().text());
     listings.push({ id: `bb-${id}`, bank: 'Banco do Brasil', state: location[2],
       city: location[1], neighborhood: '', address: '', type, price, appraisal: null,
-      discount: null, financing: false, description: '',
+      discount: null, financing: false, fgts: null, inDispute: null, description: '',
       mode: /venda direta/i.test(event) ? 'Venda direta' : 'Leilão',
       imageUrl: absolute('https://www.seuimovelbb.com.br', card.find('.foto').attr('src')),
       officialUrl: absolute('https://www.seuimovelbb.com.br', path),
@@ -85,10 +85,15 @@ async function megaPage(seller, page) {
     const imageUrl = card.find('.card-image').attr('data-bg') || '';
     const date = clean(card.find('.instance.active .card-first-instance-date, .instance.active .card-second-instance-date').first().text());
     const dateParts = date.match(/(\d{2})\/(\d{2})\/(\d{4}) às (\d{2}):(\d{2})/);
-    if (dateParts && Date.parse(`${dateParts[3]}-${dateParts[2]}-${dateParts[1]}T${dateParts[4]}:${dateParts[5]}:00-03:00`) < Date.now()) return;
+    const endTime = dateParts
+      ? Date.parse(`${dateParts[3]}-${dateParts[2]}-${dateParts[1]}T${dateParts[4]}:${dateParts[5]}:00-03:00`) : NaN;
+    const auctionEndsAt = Number.isFinite(endTime) ? new Date(endTime).toISOString() : null;
+    if (auctionEndsAt && Date.parse(auctionEndsAt) < Date.now()) return;
+    const bidCount = Number(clean(card.find('.card-views-bids span').eq(1).text()).replace(/\D/g, '')) || 0;
     listings.push({ id: `mega-${id}`, state: location[2], city: location[1],
       neighborhood: '', address: '', type, price, appraisal: null, discount: null,
-      financing: false, description: title, mode: 'Leilão', auctionDate: date,
+      financing: false, fgts: null, inDispute: bidCount > 0 && Boolean(auctionEndsAt), bidCount,
+      description: title, mode: 'Leilão', auctionDate: date, auctionEndsAt,
       imageUrl: /^https:\/\/cdn\d*\.megaleiloes\.com\.br\//.test(imageUrl) ? imageUrl : '',
       officialUrl, sourceName: 'Mega Leilões' });
   });
