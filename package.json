@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npx wrangler dev",
-    "deploy": "npx wrangler deploy",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
     "sync:caixa": "pwsh -File scripts/download-caixa.ps1",
     "sync:banks": "node scripts/sync-banks.mjs"
   },
